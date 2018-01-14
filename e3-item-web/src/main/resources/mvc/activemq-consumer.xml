@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:dubbo="http://code.alibabatech.com/schema/dubbo" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+	http://www.springframework.org/schema/context 
+	http://www.springframework.org/schema/context/spring-context-4.0.xsd
+	http://code.alibabatech.com/schema/dubbo
+	http://code.alibabatech.com/schema/dubbo/dubbo.xsd
+	http://www.springframework.org/schema/aop 
+	http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+	http://www.springframework.org/schema/tx 
+	http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+	http://www.springframework.org/schema/mvc
+	http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+	http://www.springframework.org/schema/util
+	http://www.springframework.org/schema/util/spring-util-4.0.xsd">
+	<!-- 创建acitiveMQ消息服务工厂对象,把acitiveMQ消息服务器交给spring管理 -->
+	<bean id="targetConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+		<constructor-arg name="brokerURL" value="tcp://192.168.66.66:61616"></constructor-arg>
+	</bean>
+
+	<!-- spring jms java消息服务提供工厂对象管理mq消息 -->
+	<bean id="connectionFactory"
+		class="org.springframework.jms.connection.SingleConnectionFactory">
+		<property name="targetConnectionFactory" ref="targetConnectionFactory"></property>
+	</bean>
+
+	<!-- 点对点模式空间 -->
+	<!-- <bean id="oneQueue" class="org.apache.activemq.command.ActiveMQQueue">
+		<constructor-arg value="oneQueue"></constructor-arg>
+	</bean> -->
+	<!-- 发布订阅模式空间 -->
+	<!-- <bean id="oneTopic" class="org.apache.activemq.command.ActiveMQTopic">
+		<constructor-arg value="oneTopic"></constructor-arg>
+	</bean> -->
+	<bean id="add_update_del_topic" class="org.apache.activemq.command.ActiveMQTopic">
+		<constructor-arg value="add_update_del_topic"></constructor-arg>
+	</bean>
+
+	<!-- 创建接受消息监听器,此监听器是真实接受消息的监听器 -->
+	<bean id="myMessageListener" class="cn.e3.item.listener.FmListener"></bean>
+
+	<!-- spring jms 提供消息监听容器接受消息. -->
+	<!-- 自动触发接受消息 -->
+	<bean
+		class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+		<!-- 指定消息服务器地址 -->
+		<property name="connectionFactory" ref="connectionFactory"></property>
+		<!-- 指定接受消息服务器空间 -->
+		<property name="destination" ref="add_update_del_topic"></property>
+		<!-- 指定消息接受者 -->
+		<property name="messageListener" ref="myMessageListener"></property>
+	</bean>
+
+</beans>
